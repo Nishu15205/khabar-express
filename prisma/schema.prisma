@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// News articles aggregated from RSS feeds of leading Hindi news publishers.
+// The DB acts as a durable cache so the site keeps working even when a feed is down.
+model Article {
+  id          String   @id @default(cuid())
+  guid        String   @unique // normalized article link (dedupe key)
+  title       String
+  description String   @default("")
+  link        String
+  image       String?
+  category    String   // top | desh | duniya | khel | business | entertainment | tech
+  source      String   // e.g. "TV9 हिंदी", "BBC हिंदी"
+  views       Int      @default(0)
+  publishedAt DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([category, publishedAt])
+  @@index([views])
+  @@index([publishedAt])
+}

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SiteHeader } from "@/components/news/header";
 import { SiteFooter } from "@/components/news/footer";
+import { InfoModal, type InfoKey } from "@/components/news/info-modal";
 import { BreakingTicker } from "@/components/news/breaking-ticker";
 import { HeroSection } from "@/components/news/hero-section";
 import { CategorySection } from "@/components/news/category-section";
@@ -21,6 +22,7 @@ export function NewsPortal({ initialTop, initialTrending }: NewsPortalProps) {
   const [activeCategory, setActiveCategory] = useState("top");
   const [selected, setSelected] = useState<NewsArticle | null>(null);
   const [search, setSearch] = useState("");
+  const [infoKey, setInfoKey] = useState<InfoKey>(null);
 
   // Support ?q= deep links (Google SearchAction / shared search URLs)
   useEffect(() => {
@@ -97,9 +99,10 @@ export function NewsPortal({ initialTop, initialTrending }: NewsPortalProps) {
         </div>
       </main>
 
-      <SiteFooter onCategoryChange={handleCategoryChange} />
+      <SiteFooter onCategoryChange={handleCategoryChange} onOpenInfo={setInfoKey} />
 
       <ArticleModal article={selected} onClose={() => setSelected(null)} />
+      <InfoModal openKey={infoKey} onOpenChange={setInfoKey} />
     </div>
   );
 }

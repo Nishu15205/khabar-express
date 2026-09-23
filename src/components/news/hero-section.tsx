@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
-import { CompactCard, CategoryChip, SourceMeta, FallbackThumb } from "@/components/news/news-card";
-import { categoryLabel } from "@/lib/feeds";
+import { CompactCard, CategoryChip, SourceMeta } from "@/components/news/news-card";
+import { categoryImage, categoryLabel } from "@/lib/feeds";
 import type { NewsArticle } from "@/lib/types";
 
 /**
  * Hero: featured story (2/3) + top side stories (1/3).
+ * Images are copyright-safe AI-generated category artwork.
  */
 export function HeroSection({
   articles,
@@ -27,18 +28,14 @@ export function HeroSection({
         className="group cursor-pointer overflow-hidden rounded-xl border bg-card shadow-sm transition-all duration-200 hover:shadow-lg focus-within:ring-2 focus-within:ring-ring lg:col-span-2"
       >
         <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
-          {featured.image ? (
-            <Image
-              src={featured.image}
-              alt={featured.title}
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 66vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-            />
-          ) : (
-            <FallbackThumb title={featured.title} />
-          )}
+          <Image
+            src={categoryImage(featured.category)}
+            alt={`${categoryLabel(featured.category)} — मुख्य खबर`}
+            fill
+            priority
+            sizes="(max-width: 1024px) 100vw, 66vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          />
           <div className="absolute left-3 top-3">
             <CategoryChip category={featured.category} />
           </div>

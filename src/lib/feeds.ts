@@ -33,6 +33,17 @@ export function categoryLabel(slug: string): string {
   return CATEGORIES.find((c) => c.slug === slug)?.label ?? "खबर";
 }
 
+const KNOWN_IMAGE_SLUGS = new Set<string>(CATEGORIES.map((c) => c.slug));
+
+/**
+ * Copyright-safe category artwork (AI-generated, owned by this site).
+ * We deliberately do NOT hotlink publisher photos — that is the #1 reason
+ * news aggregators get rejected by Google AdSense / receive DMCA strikes.
+ */
+export function categoryImage(slug: string): string {
+  return KNOWN_IMAGE_SLUGS.has(slug) ? `/categories/${slug}.png` : "/categories/top.png";
+}
+
 export interface FeedSource {
   /** Publisher name shown on cards, e.g. "TV9 हिंदी" */
   name: string;

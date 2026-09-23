@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { Clock, Newspaper } from "lucide-react";
+import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { timeAgoHi } from "@/lib/time";
-import { categoryLabel } from "@/lib/feeds";
+import { categoryImage, categoryLabel } from "@/lib/feeds";
 import { cn } from "@/lib/utils";
 import type { NewsArticle } from "@/lib/types";
 
@@ -19,20 +19,11 @@ function CategoryChip({ category }: { category: string }) {
 function SourceMeta({ article, className }: { article: NewsArticle; className?: string }) {
   return (
     <div className={cn("flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground", className)}>
-      <span className="font-medium text-foreground/70">{article.source}</span>
+      <span className="font-medium text-foreground/70">स्रोत: {article.source}</span>
       <span className="flex items-center gap-1" suppressHydrationWarning>
         <Clock className="h-3 w-3" aria-hidden="true" />
         {timeAgoHi(article.publishedAt)}
       </span>
-    </div>
-  );
-}
-
-export function FallbackThumb({ title }: { title: string }) {
-  return (
-    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 via-muted to-primary/5">
-      <Newspaper className="h-10 w-10 text-primary/25" aria-hidden="true" />
-      <span className="sr-only">{title}</span>
     </div>
   );
 }
@@ -51,18 +42,15 @@ export function NewsCard({
       onClick={() => onSelect(article)}
       className="group flex cursor-pointer flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-within:ring-2 focus-within:ring-ring"
     >
+      {/* Copyright-safe: AI-generated category artwork, no publisher hotlinking */}
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
-        {article.image ? (
-          <Image
-            src={article.image}
-            alt={article.title}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <FallbackThumb title={article.title} />
-        )}
+        <Image
+          src={categoryImage(article.category)}
+          alt={`${categoryLabel(article.category)} — समाचार चित्र`}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
         <div className="absolute left-2.5 top-2.5">
           <CategoryChip category={article.category} />
         </div>
@@ -100,17 +88,13 @@ export function CompactCard({
     >
       {showImage && (
         <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-md bg-muted">
-          {article.image ? (
-            <Image
-              src={article.image}
-              alt={article.title}
-              fill
-              sizes="96px"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <FallbackThumb title={article.title} />
-          )}
+          <Image
+            src={categoryImage(article.category)}
+            alt={`${categoryLabel(article.category)} — समाचार चित्र`}
+            fill
+            sizes="96px"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
         </div>
       )}
       <div className="min-w-0 flex-1 space-y-1">

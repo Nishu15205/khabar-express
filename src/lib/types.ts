@@ -4,7 +4,6 @@ export interface NewsArticle {
   title: string;
   description: string;
   link: string;
-  image: string | null;
   category: string;
   source: string;
   views: number;

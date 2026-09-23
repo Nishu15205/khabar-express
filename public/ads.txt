@@ -1,0 +1,8 @@
+# ads.txt — Google AdSense के लिए (AUTHORIZED DIGITAL SELLERS)
+#
+# ⚠️ AdSense approval मिलने के बाद नीचे वाली लाइन से # हटाकर
+#    अपनी publisher ID (ca-pub-XXXXXXXXXXXXXXXX की 16 digits) भरें।
+#    फिर इसे https://aapka-domain.com/ads.txt पर उपलब्ध होना चाहिए।
+#
+# उदाहरण (pub-0000000000000000 की जगह अपनी ID डालें):
+# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0

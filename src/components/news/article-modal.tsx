@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Clock, ExternalLink, Eye, Link2, Loader2, X } from "lucide-react";
@@ -9,13 +9,16 @@ import { Badge } from "@/components/ui/badge";
 import { AdSlot } from "@/components/ads/ad-slot";
 import { useToast } from "@/hooks/use-toast";
 import { formatDateHi, timeAgoHi } from "@/lib/time";
-import { categoryLabel } from "@/lib/feeds";
-import { FallbackThumb } from "@/components/news/news-card";
+import { categoryImage, categoryLabel } from "@/lib/feeds";
 import type { NewsArticle } from "@/lib/types";
 
 /**
- * Full-screen reading overlay for a single news article (SPA — no page change,
- * so it works everywhere and keeps the UX fast).
+ * Full-screen reading overlay for a single news article (SPA — no page change).
+ *
+ * Copyright-safe by design:
+ * - shows ONLY the headline + short RSS snippet (fair-use style summary)
+ * - always attributes the source publisher
+ * - sends the reader to the original article for the full text
  */
 export function ArticleModal({
   article,
@@ -46,16 +49,6 @@ export function ArticleModal({
       document.body.style.overflow = "";
     };
   }, [article, onClose]);
-
-  const paragraphs = useMemo(() => {
-    if (!article?.description) return [];
-    const sentences = article.description.split(/(?<=[।.!?])\s+/);
-    const chunks: string[] = [];
-    for (let i = 0; i < sentences.length; i += 2) {
-      chunks.push(sentences.slice(i, i + 2).join(" "));
-    }
-    return chunks.filter(Boolean);
-  }, [article]);
 
   const handleShare = async () => {
     if (!article || sharing) return;
@@ -114,7 +107,7 @@ export function ArticleModal({
                   {categoryLabel(article.category)}
                 </Badge>
                 <span className="truncate text-xs text-muted-foreground">
-                  {article.source}
+                  स्रोत: {article.source}
                 </span>
               </div>
               <Button
@@ -128,20 +121,16 @@ export function ArticleModal({
               </Button>
             </div>
 
-            {/* Image */}
+            {/* Copyright-safe category artwork */}
             <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted sm:rounded-t-none">
-              {article.image ? (
-                <Image
-                  src={article.image}
-                  alt={article.title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 768px"
-                  className="object-cover"
-                  priority
-                />
-              ) : (
-                <FallbackThumb title={article.title} />
-              )}
+              <Image
+                src={categoryImage(article.category)}
+                alt={`${categoryLabel(article.category)} — समाचार चित्र`}
+                fill
+                sizes="(max-width: 768px) 100vw, 768px"
+                className="object-cover"
+                priority
+              />
             </div>
 
             <div className="space-y-5 p-5 sm:p-7">
@@ -173,31 +162,37 @@ export function ArticleModal({
                   <Link2 className="mr-1.5 h-3.5 w-3.5" />
                   लिंक कॉपी
                 </Button>
-                <a
-                  href={article.link}
-                  target="_blank"
-                  rel="noopener noreferrer nofollow"
-                  className="ml-auto"
-                >
-                  <Button size="sm" variant="secondary">
-                    पूरी खबर पढ़ें
-                    <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
-                  </Button>
-                </a>
               </div>
 
               <AdSlot minHeight={110} className="rounded-lg" label="आर्टिकल विज्ञापन" />
 
-              <div className="space-y-4 text-[16px] leading-8 text-foreground/90 sm:text-[17px]">
-                {paragraphs.map((p, i) => (
-                  <p key={i}>{p}</p>
-                ))}
-              </div>
+              {/* Short snippet only — full story stays with the publisher */}
+              {article.description && (
+                <p className="text-[16px] leading-8 text-foreground/90 sm:text-[17px]">
+                  {article.description}
+                </p>
+              )}
 
-              <div className="rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground">
-                यह खबर <span className="font-semibold text-foreground">{article.source}</span> से
-                प्रकाशित हुई है। इसे हमारी टीम द्वारा संपादित नहीं किया गया है। पूरी खबर के लिए
-                मूल स्रोत पढ़ें।
+              <div className="rounded-lg border border-primary/25 bg-primary/5 p-4 sm:p-5">
+                <p className="text-sm font-semibold text-foreground">
+                  यह खबर मूल रूप से <span className="text-primary">{article.source}</span> द्वारा
+                  प्रकाशित है।
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  हम केवल शीर्षक और संक्षिप्त जानकारी दिखाते हैं। पूरी खबर पढ़ने के लिए मूल
+                  स्रोत पर जाएँ — वहीं सभी अधिकार सुरक्षित हैं।
+                </p>
+                <a
+                  href={article.link}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="mt-3 inline-block"
+                >
+                  <Button size="lg" className="w-full sm:w-auto">
+                    पूरी खबर {article.source} पर पढ़ें
+                    <ExternalLink className="ml-1.5 h-4 w-4" />
+                  </Button>
+                </a>
               </div>
             </div>
           </motion.article>

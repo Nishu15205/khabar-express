@@ -25,7 +25,7 @@ const parser = new Parser({
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36 KhabarBot/1.0";
 
-function cleanText(html: string, max = 420): string {
+function cleanText(html: string, max = 220): string {
   const text = html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
@@ -38,6 +38,21 @@ function cleanText(html: string, max = 420): string {
     .replace(/&gt;/gi, ">")
     .replace(/&hellip;/gi, "…")
     .replace(/&laquo;|&raquo;/gi, "")
+    // numeric HTML entities (e.g. &#8216; &#x2018;) → real characters
+    .replace(/&#x([0-9a-f]+);/gi, (_, h: string) => {
+      try {
+        return String.fromCodePoint(parseInt(h, 16));
+      } catch {
+        return " ";
+      }
+    })
+    .replace(/&#(\d+);/g, (_, d: string) => {
+      try {
+        return String.fromCodePoint(parseInt(d, 10));
+      } catch {
+        return " ";
+      }
+    })
     .replace(/\s+/g, " ")
     .trim();
   if (text.length <= max) return text;
@@ -129,7 +144,8 @@ async function fetchFeed(feed: FeedSource): Promise<number> {
       item.content ??
       item.description ??
       "";
-    const description = cleanText(rawDesc);
+    // Copyright-safe: store only a short snippet (~220 chars), never full text.
+    const description = cleanText(rawDesc, 220);
     const image = extractImage(item as Record<string, unknown>);
     const pubRaw = item.isoDate ?? item.pubDate;
     const pubDate = pubRaw ? new Date(pubRaw) : new Date();
@@ -211,7 +227,6 @@ const SELECT = {
   title: true,
   description: true,
   link: true,
-  image: true,
   category: true,
   source: true,
   views: true,
@@ -223,15 +238,27 @@ type DbArticle = {
   title: string;
   description: string;
   link: string;
-  image: string | null;
   category: string;
   source: string;
   views: number;
   publishedAt: Date;
 };
 
+/**
+ * Copyright-safe DTO:
+ * - publisher image URLs are never exposed (no hotlinking)
+ * - descriptions are defensively capped at 220 chars even for legacy rows
+ */
 function toDTO(a: DbArticle): NewsArticle {
-  return { ...a, publishedAt: a.publishedAt.toISOString() };
+  const { image: _image, ...rest } = a as DbArticle & { image?: string | null };
+  return {
+    ...rest,
+    description:
+      rest.description.length > 221
+        ? rest.description.slice(0, 220).trimEnd() + "…"
+        : rest.description,
+    publishedAt: rest.publishedAt.toISOString(),
+  };
 }
 
 export async function getNews(opts: {

@@ -26,3 +26,12 @@ model Article {
   @@index([views])
   @@index([publishedAt])
 }
+
+// संपर्क पृष्ठ से भेजे गए संदेश (Contact page submissions).
+model Feedback {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+}

@@ -3,22 +3,20 @@
 import Image from "next/image";
 import { FileText, Rss, ShieldCheck } from "lucide-react";
 import { CATEGORIES } from "@/lib/feeds";
-import type { InfoKey } from "@/components/news/info-modal";
 
-const LEGAL_LINKS: Array<{ key: Exclude<InfoKey, null>; label: string }> = [
-  { key: "about", label: "हमारे बारे में" },
-  { key: "privacy", label: "गोपनीयता नीति" },
-  { key: "terms", label: "उपयोग की शर्तें" },
-  { key: "copyright", label: "कॉपीराइट / DMCA" },
-  { key: "contact", label: "संपर्क करें" },
+// महत्वपूर्ण पृष्ठ — अब मौलिक (crawlable) पृष्ठ URL पर जाते हैं,
+// AdSense reviewer के लिए सीधे खुलने योग्य लिंक ज़रूरी हैं।
+const LEGAL_LINKS: Array<{ href: string; label: string }> = [
+  { href: "/?page=about", label: "हमारे बारे में" },
+  { href: "/?page=privacy", label: "गोपनीयता नीति" },
+  { href: "/?page=contact", label: "संपर्क करें" },
+  { href: "/?article=upi-suraksha-online-fraud-se-bachav", label: "ओरिजिनल लेख" },
 ];
 
 export function SiteFooter({
   onCategoryChange,
-  onOpenInfo,
 }: {
   onCategoryChange: (slug: string) => void;
-  onOpenInfo: (key: Exclude<InfoKey, null>) => void;
 }) {
   const year = new Date().getFullYear();
 
@@ -68,13 +66,13 @@ export function SiteFooter({
           </h3>
           <ul className="flex flex-wrap gap-x-4 gap-y-2">
             {LEGAL_LINKS.map((l) => (
-              <li key={l.key}>
-                <button
-                  onClick={() => onOpenInfo(l.key)}
+              <li key={l.href}>
+                <a
+                  href={l.href}
                   className="text-sm text-muted-foreground transition-colors hover:text-primary"
                 >
                   {l.label}
-                </button>
+                </a>
               </li>
             ))}
           </ul>

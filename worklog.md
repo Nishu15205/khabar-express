@@ -126,3 +126,24 @@ Work Log:
 Stage Summary:
 - Code-side: verification meta now raw+exact in head, pushed to Nishu15205/khabar-express
 - User-side action needed (the REAL fix): reconnect Vercel to Nishu15205/khabar-express repo, set env vars, redeploy, then re-verify in AdSense
+
+---
+Task ID: 6
+Agent: main (Z.ai Code)
+Task: Privacy Policy / About / Contact pages + original articles (AdSense approval ke liye)
+
+Work Log:
+- Re-verified AdSense code on live deploy (khabar-express-m8hj.vercel.app): meta tag + script + ads.txt all present ✓
+- Added 6 ORIGINAL Hindi articles in src/lib/original-articles.ts (UPI safety, weather forecasting, ISRO, cricket history, box office math, family budget) — each ~500 words, original, informative
+- Created standalone page system within single-route constraint: /?page=privacy | about | contact and /?article=<slug> (server-rendered, per-page metadata + canonical)
+- page-shell.tsx (brand header + sticky footer), legal-pages.tsx (Privacy with DART/AdSense cookie clause, About with editorial standards, Contact with DMCA 48h policy)
+- contact-form-client.tsx + POST /api/contact (zod validation, saves to Feedback table, self-healing CREATE TABLE for /tmp Vercel DB)
+- Prisma schema: Feedback model added + db:push
+- Homepage: "खबर एक्सप्रेस ओरिजिनल" ExclusiveSection (6 cards) + footer legal links now real crawlable URLs (replaced modal buttons)
+- sitemap.ts: 10 URLs (home + 3 legal + 6 articles)
+- Article pages: NewsArticle JSON-LD with author/publisher/keywords
+- Verified: lint 0 errors, build ✓, all routes 200, contact form E2E submit works in browser, article page renders with byline + tags, sitemap 10 URLs
+
+Stage Summary:
+- Site now has: legal pages (AdSense requirement), original content (anti-"copied content" rejection), working contact form
+- INFO: SITE_EMAIL still placeholder contact@khabarexpress.in — user should replace with real email in src/components/pages/legal-pages.tsx

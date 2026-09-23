@@ -4,32 +4,35 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SiteHeader } from "@/components/news/header";
 import { SiteFooter } from "@/components/news/footer";
-import { InfoModal, type InfoKey } from "@/components/news/info-modal";
 import { BreakingTicker } from "@/components/news/breaking-ticker";
 import { HeroSection } from "@/components/news/hero-section";
 import { CategorySection } from "@/components/news/category-section";
 import { TrendingSidebar } from "@/components/news/trending-sidebar";
 import { TrendingKeywords } from "@/components/news/trending-keywords";
+import { ExclusiveSection } from "@/components/news/exclusive-section";
 import { ArticleModal } from "@/components/news/article-modal";
 import { AdSlot } from "@/components/ads/ad-slot";
 import type { NewsArticle } from "@/lib/types";
+import type { OriginalArticle } from "@/lib/original-articles";
 
 interface NewsPortalProps {
   initialTop: NewsArticle[];
   initialTrending: NewsArticle[];
   /** आज की खबरों से auto-extracted SEO keywords (server-rendered)। */
   keywords?: string[];
+  /** खबर एक्सप्रेस के मौलिक लेख (original content)। */
+  originalArticles?: OriginalArticle[];
 }
 
 export function NewsPortal({
   initialTop,
   initialTrending,
   keywords = [],
+  originalArticles = [],
 }: NewsPortalProps) {
   const [activeCategory, setActiveCategory] = useState("top");
   const [selected, setSelected] = useState<NewsArticle | null>(null);
   const [search, setSearch] = useState("");
-  const [infoKey, setInfoKey] = useState<InfoKey>(null);
 
   // Support ?q= deep links (Google SearchAction / shared search URLs)
   useEffect(() => {
@@ -91,6 +94,9 @@ export function NewsPortal({
         {/* आज के ट्रेंडिंग टॉपिक — auto SEO keywords (daily news से) */}
         <TrendingKeywords keywords={keywords} onSelect={handleKeywordSelect} />
 
+        {/* खबर एक्सप्रेस ओरिजिनल — मौलिक लेख (original content) */}
+        <ExclusiveSection articles={originalArticles} />
+
         {/* Top leaderboard ad */}
         <AdSlot minHeight={120} className="rounded-lg" label="हेडर विज्ञापन" />
 
@@ -117,10 +123,9 @@ export function NewsPortal({
         </div>
       </main>
 
-      <SiteFooter onCategoryChange={handleCategoryChange} onOpenInfo={setInfoKey} />
+      <SiteFooter onCategoryChange={handleCategoryChange} />
 
       <ArticleModal article={selected} onClose={() => setSelected(null)} />
-      <InfoModal openKey={infoKey} onOpenChange={setInfoKey} />
     </div>
   );
 }

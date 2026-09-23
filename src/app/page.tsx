@@ -3,11 +3,19 @@ import { NewsPortal } from "@/components/news/news-portal";
 import { QueryProvider } from "@/components/query-provider";
 import { getInitialData } from "@/lib/news-service";
 import { BASE_KEYWORDS, getDailyKeywords } from "@/lib/seo-keywords";
+import {
+  getOriginalArticle,
+  ORIGINAL_ARTICLES,
+} from "@/lib/original-articles";
+import {
+  AboutPage,
+  ContactPage,
+  PrivacyPage,
+} from "@/components/pages/legal-pages";
+import {
+  OriginalArticlePage,
+} from "@/components/pages/original-article-page";
 import type { NewsArticle } from "@/lib/types";
-
-// ISR: regenerate the homepage at most every 5 minutes.
-// Combined with the feed refresher, news stays fresh with zero manual work.
-export const revalidate = 300;
 
 const siteUrl = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
@@ -18,12 +26,79 @@ const EMPTY_DATA: { top: NewsArticle[]; trending: NewsArticle[] } = {
   trending: [],
 };
 
+type SearchParams = { page?: string; article?: string };
+
 /**
  * डायनामिक SEO metadata — हर 5 मिनट में आज की trending खबरों के
  * असली keywords इस page के <head> में inject हो जाते हैं।
- * जैसे-जैसे न्यूज़ बदलेगी, Google को नए topical signals मिलते रहेंगे।
+ * स्टैंडअलोन पृष्ठों (privacy/about/contact/article) का अपना
+ * title/description/canonical बनता है।
  */
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}): Promise<Metadata> {
+  const { page, article } = await searchParams;
+
+  // ----- स्टैंडअलोन पृष्ठ -----
+  if (page === "privacy") {
+    return {
+      title: "गोपनीयता नीति (Privacy Policy)",
+      description:
+        "खबर एक्सप्रेस की गोपनीयता नीति — कौन-सी जानकारी एकत्र होती है, कुकीज़ और Google AdSense (DART) का उपयोग, और आपके अधिकार।",
+      alternates: { canonical: "/?page=privacy" },
+    };
+  }
+  if (page === "about") {
+    return {
+      title: "हमारे बारे में (About Us)",
+      description:
+        "खबर एक्सप्रेस — स्वतंत्र हिंदी न्यूज़ पोर्टल। जानिए हम RSS स्रोतों के साथ पारदर्शी रूप से कैसे काम करते हैं और मौलिक लेख कैसे लिखते हैं।",
+      alternates: { canonical: "/?page=about" },
+    };
+  }
+  if (page === "contact") {
+    return {
+      title: "संपर्क करें (Contact Us)",
+      description:
+        "खबर एक्सप्रेस से संपर्क — ईमेल और ऑनलाइन फॉर्म। खबर में सुधार, कॉपीराइट/DMCA और साझेदारी के लिए 24-48 घंटों में जवाब।",
+      alternates: { canonical: "/?page=contact" },
+    };
+  }
+
+  // ----- मौलिक लेख -----
+  if (article) {
+    const a = getOriginalArticle(article);
+    if (a) {
+      return {
+        title: a.title,
+        description: a.excerpt,
+        keywords: a.tags,
+        alternates: { canonical: `/?article=${a.slug}` },
+        openGraph: {
+          type: "article",
+          locale: "hi_IN",
+          url: `${siteUrl}/?article=${a.slug}`,
+          siteName: "खबर एक्सप्रेस",
+          title: a.title,
+          description: a.excerpt,
+          publishedTime: a.publishedAt,
+          authors: ["खबर एक्सप्रेस टीम"],
+          images: [{ url: "/og-banner.png", width: 1200, height: 630 }],
+        },
+        twitter: {
+          card: "summary_large_image",
+          title: a.title,
+          description: a.excerpt,
+          images: ["/og-banner.png"],
+        },
+        other: { news_keywords: a.tags.join(", ") },
+      };
+    }
+  }
+
+  // ----- होमपेज (डायनामिक डेली keywords) -----
   const daily = await getDailyKeywords(20);
   const hot = daily.slice(0, 4);
 
@@ -40,7 +115,7 @@ export async function generateMetadata(): Promise<Metadata> {
     : baseDescription;
 
   return {
-    title, // absolute — layout के default को override करता है
+    title,
     description,
     keywords: [...BASE_KEYWORDS, ...daily],
     alternates: { canonical: "/" },
@@ -67,13 +142,30 @@ export async function generateMetadata(): Promise<Metadata> {
       images: ["/og-banner.png"],
     },
     other: {
-      // Google News topical signal — रोज़ अपने-आप बदलता है
       news_keywords: daily.join(", "),
     },
   };
 }
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const { page, article } = await searchParams;
+
+  // ----- स्टैंडअलोन पृष्ठ (AdSense के लिए ज़रूरी legal pages) -----
+  if (page === "privacy") return <PrivacyPage />;
+  if (page === "about") return <AboutPage />;
+  if (page === "contact") return <ContactPage />;
+
+  // ----- मौलिक लेख (original content pages) -----
+  if (article) {
+    const a = getOriginalArticle(article);
+    if (a) return <OriginalArticlePage article={a} siteUrl={siteUrl} />;
+  }
+
+  // ----- होमपेज -----
   // Never let a cold/missing database crash the page (e.g. fresh serverless
   // deploy) — the UI refetches client-side while the DB self-heals + reseeds.
   const [{ top, trending }, keywords] = await Promise.all([
@@ -107,6 +199,13 @@ export default async function Home() {
     inLanguage: "hi-IN",
     isPartOf: { "@id": `${siteUrl}/#website` },
     keywords: keywords.join(", "),
+    hasPart: ORIGINAL_ARTICLES.map((a) => ({
+      "@type": "NewsArticle",
+      headline: a.title,
+      url: `${siteUrl}/?article=${a.slug}`,
+      datePublished: a.publishedAt,
+      author: { "@type": "Organization", name: "खबर एक्सप्रेस टीम" },
+    })),
   };
 
   return (
@@ -124,6 +223,7 @@ export default async function Home() {
           initialTop={top}
           initialTrending={trending}
           keywords={keywords.slice(0, 14)}
+          originalArticles={ORIGINAL_ARTICLES}
         />
       </QueryProvider>
     </>

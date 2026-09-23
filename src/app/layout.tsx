@@ -88,11 +88,11 @@ export const metadata: Metadata = {
       "देश, दुनिया, खेल, बिज़नेस, मनोरंजन और टेक्नोलॉजी की ताज़ा हिंदी खबरें — ब्रेकिंग न्यूज़ और लाइव अपडेट हर पल।",
     images: ["/og-banner.png"],
   },
-  // Google News style keyword signal + AdSense site association
+  // Google News style keyword signal (AdSense verification meta is
+  // rendered raw in <head> below — Google का exact suggested tag)
   other: {
     news_keywords:
       "हिंदी न्यूज़, ताज़ा खबर, ब्रेकिंग न्यूज़, हिंदी समाचार, देश, दुनिया, खेल, बिज़नेस, मनोरंजन, टेक्नोलॉजी",
-    "google-adsense-account": ADSENSE_CLIENT,
   },
   robots: {
     index: true,
@@ -160,6 +160,13 @@ export default function RootLayout({
   return (
     <html lang="hi" suppressHydrationWarning>
       <body className="font-sans antialiased bg-background text-foreground min-h-screen flex flex-col">
+        {/*
+          AdSense site-verification meta — Google के suggested method का
+          EXACT tag, raw HTML की तरह <head> में (React 19 hoist करता है)।
+          इससे AdSense crawler 100% पकड़ लेता है।
+        */}
+        <meta name="google-adsense-account" content={ADSENSE_CLIENT} />
+
         {/*
           Fonts via CDN <link> — React 19 इन्हें <head> में hoist करता है।
           जान-बूझकर next/font/google नहीं: वो build के समय Google Fonts

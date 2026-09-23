@@ -110,3 +110,19 @@ Stage Summary:
 - Site SEO keywords auto-update daily from real news — zero maintenance
 - AdSense live on real publisher ID ca-pub-5021487228942605 (script in <head>, meta, ads.txt, AdSlots)
 - Commit + push to Nishu15205/khabar-express follows this entry
+
+---
+Task ID: 5
+Agent: main (Z.ai Code)
+Task: AdSense verification failing — diagnose & fix ("We couldn't verify your site")
+
+Work Log:
+- Diagnosed live site https://khabar-express.vercel.app — HTTP 200 but title "News App", 912 bytes, plain HTML template (style.css/script.js) → WRONG app deployed; Vercel project connected to a different repo, NOT Nishu15205/khabar-express
+- That's why AdSense verification failed: crawler saw no meta/script at all (code was never live)
+- Honored user request: rendered Google's EXACT suggested tag raw in <head> via JSX: <meta name="google-adsense-account" content="ca-pub-5021487228942605"/> (removed duplicate from metadata.other; kept adsbygoogle.js script — required for serving ads post-approval)
+- Verified rendering locally (exact tag in HTML), lint clean, dev.log clean
+- Fixed user's GitHub repo list: khabar-express is correct & latest; several other repos exist (studysetu, SevaSaathi, etc.) — one of them or a manual deploy is what Vercel is serving
+
+Stage Summary:
+- Code-side: verification meta now raw+exact in head, pushed to Nishu15205/khabar-express
+- User-side action needed (the REAL fix): reconnect Vercel to Nishu15205/khabar-express repo, set env vars, redeploy, then re-verify in AdSense

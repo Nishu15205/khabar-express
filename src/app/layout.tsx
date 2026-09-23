@@ -28,22 +28,44 @@ export const metadata: Metadata = {
     template: "%s | खबर एक्सप्रेस",
   },
   description:
-    "खबर एक्सप्रेस — देश, दुनिया, खेल, बिज़नेस, मनोरंजन और टेक्नोलॉजी की ताज़ा हिंदी खबरें। हर पल अपडेट, सच्ची और तेज़ खबरें सबसे पहले।",
+    "खबर एक्सप्रेस — देश, दुनिया, खेल, बिज़नेस, मनोरंजन और टेक्नोलॉजी की ताज़ा हिंदी खबरें। ब्रेकिंग न्यूज़, आज की बड़ी खबरें और लाइव अपडेट सबसे पहले, हर पल अपडेट।",
   keywords: [
+    // Hindi — high-volume news queries
     "हिंदी न्यूज़",
     "ताज़ा खबर",
+    "ताज़ा हिंदी खबरें",
     "ब्रेकिंग न्यूज़",
+    "ब्रेकिंग न्यूज़ हिंदी में",
+    "आज की ताज़ा खबर",
+    "आज की बड़ी खबरें",
     "हिंदी समाचार",
-    "देश",
-    "दुनिया",
+    "समाचार हिंदी में",
+    "देश की खबर",
+    "दुनिया की खबर",
     "खेल समाचार",
-    "बिज़नेस न्यूज़",
-    "बॉलीवुड",
-    "टेक्नोलॉजी न्यूज़",
+    "क्रिकेट न्यूज़ हिंदी",
+    "बिज़नेस न्यूज़ हिंदी",
+    "मनोरंजन की खबरें",
+    "बॉलीवुड न्यूज़",
+    "टेक्नोलॉजी न्यूज़ हिंदी",
+    // English — India news search patterns
     "hindi news",
+    "hindi news today",
     "latest hindi news",
     "breaking news hindi",
+    "aaj ke samachar",
+    "top news in hindi",
+    "live hindi news",
+    "india news in hindi",
+    "world news in hindi",
+    "sports news in hindi",
+    "business news in hindi",
+    "bollywood news hindi",
+    "tech news in hindi",
+    // Brand
     "khabar express",
+    "खबर एक्सप्रेस",
+    "khabar express hindi news",
   ],
   applicationName: "खबर एक्सप्रेस",
   authors: [{ name: "खबर एक्सप्रेस" }],
@@ -58,13 +80,27 @@ export const metadata: Metadata = {
     siteName: "खबर एक्सप्रेस",
     title: "खबर एक्सप्रेस — देश-दुनिया की ताज़ा हिंदी खबरें",
     description:
-      "देश, दुनिया, खेल, बिज़नेस, मनोरंजन और टेक्नोलॉजी की ताज़ा हिंदी खबरें — हर पल अपडेट।",
+      "देश, दुनिया, खेल, बिज़नेस, मनोरंजन और टेक्नोलॉजी की ताज़ा हिंदी खबरें — ब्रेकिंग न्यूज़ और लाइव अपडेट हर पल।",
+    images: [
+      {
+        url: "/og-banner.png",
+        width: 1200,
+        height: 630,
+        alt: "खबर एक्सप्रेस — ताज़ा हिंदी खबरें",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "खबर एक्सप्रेस — देश-दुनिया की ताज़ा हिंदी खबरें",
     description:
-      "देश, दुनिया, खेल, बिज़नेस, मनोरंजन और टेक्नोलॉजी की ताज़ा हिंदी खबरें — हर पल अपडेट।",
+      "देश, दुनिया, खेल, बिज़नेस, मनोरंजन और टेक्नोलॉजी की ताज़ा हिंदी खबरें — ब्रेकिंग न्यूज़ और लाइव अपडेट हर पल।",
+    images: ["/og-banner.png"],
+  },
+  // Google News style keyword signal for the homepage
+  other: {
+    "news_keywords":
+      "हिंदी न्यूज़, ताज़ा खबर, ब्रेकिंग न्यूज़, हिंदी समाचार, देश, दुनिया, खेल, बिज़नेस, मनोरंजन, टेक्नोलॉजी",
   },
   robots: {
     index: true,
@@ -95,11 +131,16 @@ const jsonLd = {
       "@type": "NewsMediaOrganization",
       "@id": `${siteUrl}/#organization`,
       name: "खबर एक्सप्रेस",
+      alternateName: "Khabar Express",
+      slogan: "ताज़ा हिंदी खबरें — हर पल, सबसे तेज़",
       url: siteUrl,
       logo: {
         "@type": "ImageObject",
         url: `${siteUrl}/logo.png`,
       },
+      image: `${siteUrl}/og-banner.png`,
+      knowsLanguage: ["hi", "en"],
+      areaServed: { "@type": "Country", name: "India" },
     },
     {
       "@type": "WebSite",

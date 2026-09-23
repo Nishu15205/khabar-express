@@ -41,9 +41,11 @@ export function HeroSection({
           </div>
         </div>
         <div className="space-y-2 p-4 sm:p-5">
-          <h2 className="font-headline text-xl font-bold leading-snug transition-colors group-hover:text-primary sm:text-2xl">
+          {/* Page-level h1 — the top featured headline carries the primary
+              keywords (ताज़ा खबर / ब्रेकिंग न्यूज़) for search engines. */}
+          <h1 className="font-headline text-xl font-bold leading-snug transition-colors group-hover:text-primary sm:text-2xl">
             {featured.title}
-          </h2>
+          </h1>
           {featured.description && (
             <p className="text-sm leading-relaxed text-muted-foreground line-clamp-2 sm:text-[15px]">
               {featured.description}

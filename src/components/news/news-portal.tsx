@@ -9,6 +9,7 @@ import { BreakingTicker } from "@/components/news/breaking-ticker";
 import { HeroSection } from "@/components/news/hero-section";
 import { CategorySection } from "@/components/news/category-section";
 import { TrendingSidebar } from "@/components/news/trending-sidebar";
+import { TrendingKeywords } from "@/components/news/trending-keywords";
 import { ArticleModal } from "@/components/news/article-modal";
 import { AdSlot } from "@/components/ads/ad-slot";
 import type { NewsArticle } from "@/lib/types";
@@ -16,9 +17,15 @@ import type { NewsArticle } from "@/lib/types";
 interface NewsPortalProps {
   initialTop: NewsArticle[];
   initialTrending: NewsArticle[];
+  /** आज की खबरों से auto-extracted SEO keywords (server-rendered)। */
+  keywords?: string[];
 }
 
-export function NewsPortal({ initialTop, initialTrending }: NewsPortalProps) {
+export function NewsPortal({
+  initialTop,
+  initialTrending,
+  keywords = [],
+}: NewsPortalProps) {
   const [activeCategory, setActiveCategory] = useState("top");
   const [selected, setSelected] = useState<NewsArticle | null>(null);
   const [search, setSearch] = useState("");
@@ -48,6 +55,14 @@ export function NewsPortal({ initialTop, initialTrending }: NewsPortalProps) {
 
   const trending = useMemo(() => trendingQuery.data ?? [], [trendingQuery.data]);
 
+  // Keyword chip click → header search में भरकर results खोलो
+  const handleKeywordSelect = useCallback((kw: string) => {
+    setSearch(kw);
+    requestAnimationFrame(() => {
+      document.getElementById("site-search")?.focus();
+    });
+  }, []);
+
   const handleCategoryChange = useCallback((slug: string) => {
     setActiveCategory(slug);
     requestAnimationFrame(() => {
@@ -72,6 +87,9 @@ export function NewsPortal({ initialTop, initialTrending }: NewsPortalProps) {
 
       <main className="mx-auto w-full max-w-7xl flex-1 space-y-8 px-3 py-5 sm:px-4 sm:py-6 lg:px-6">
         <HeroSection articles={heroItems} onSelect={setSelected} />
+
+        {/* आज के ट्रेंडिंग टॉपिक — auto SEO keywords (daily news से) */}
+        <TrendingKeywords keywords={keywords} onSelect={handleKeywordSelect} />
 
         {/* Top leaderboard ad */}
         <AdSlot minHeight={120} className="rounded-lg" label="हेडर विज्ञापन" />

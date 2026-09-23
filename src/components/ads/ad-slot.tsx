@@ -19,11 +19,14 @@ interface AdSlotProps {
   label?: string;
 }
 
+// Publisher ID — env override उपलब्ध है, वरना यही default चलेगा।
+const ADSENSE_CLIENT_DEFAULT = "ca-pub-5021487228942605";
+
 /**
  * Google AdSense slot.
- * - Set NEXT_PUBLIC_ADSENSE_CLIENT (e.g. "ca-pub-XXXXXXXXXXXXXXXX") and the
- *   ad renders live. No code change needed.
- * - Without it, a clean "विज्ञापन" placeholder is shown so layout/CLS stays stable.
+ * - Auto ads render live with the default publisher ID (env var can override).
+ * - Auto ads: the <ins> with slot="auto" relies on AdSense Auto Ads placement;
+ *   before approval nothing is served and the reserved space keeps CLS at zero.
  */
 export function AdSlot({
   slot = "auto",
@@ -32,7 +35,7 @@ export function AdSlot({
   format = "auto",
   label = "विज्ञापन",
 }: AdSlotProps) {
-  const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
+  const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || ADSENSE_CLIENT_DEFAULT;
   const pushed = useRef(false);
 
   useEffect(() => {

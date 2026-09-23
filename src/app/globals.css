@@ -3,6 +3,18 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+  Font stacks (CDN-loaded via <link> in layout.tsx).
+  पहले next/font इन variables को inject करता था — अब static definitions,
+  जिससे build पर कोई बाहरी network dependency न रहे।
+*/
+:root {
+  --font-hindi: "Mukta", "Noto Sans Devanagari", ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-hindi-serif: "Noto Serif Devanagari", "Mukta", Georgia,
+    "Times New Roman", serif;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

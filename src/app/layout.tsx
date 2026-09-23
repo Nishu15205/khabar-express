@@ -1,25 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Mukta, Noto_Serif_Devanagari } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
-const mukta = Mukta({
-  variable: "--font-hindi",
-  subsets: ["devanagari", "latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-});
-
-const hindiSerif = Noto_Serif_Devanagari({
-  variable: "--font-hindi-serif",
-  subsets: ["devanagari"],
-  weight: ["400", "700", "900"],
-});
-
 const siteUrl = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
 ).replace(/\/$/, "");
+
+// Google AdSense publisher ID — env var override के साथ sane default।
+const ADSENSE_CLIENT =
+  process.env.NEXT_PUBLIC_ADSENSE_CLIENT || "ca-pub-5021487228942605";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -97,10 +88,11 @@ export const metadata: Metadata = {
       "देश, दुनिया, खेल, बिज़नेस, मनोरंजन और टेक्नोलॉजी की ताज़ा हिंदी खबरें — ब्रेकिंग न्यूज़ और लाइव अपडेट हर पल।",
     images: ["/og-banner.png"],
   },
-  // Google News style keyword signal for the homepage
+  // Google News style keyword signal + AdSense site association
   other: {
-    "news_keywords":
+    news_keywords:
       "हिंदी न्यूज़, ताज़ा खबर, ब्रेकिंग न्यूज़, हिंदी समाचार, देश, दुनिया, खेल, बिज़नेस, मनोरंजन, टेक्नोलॉजी",
+    "google-adsense-account": ADSENSE_CLIENT,
   },
   robots: {
     index: true,
@@ -121,8 +113,6 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: dark)", color: "#1a1a1a" },
   ],
 };
-
-const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -169,18 +159,37 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="hi" suppressHydrationWarning>
-      <body
-        className={`${mukta.variable} ${hindiSerif.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col`}
-      >
-        {adsenseClient ? (
-          <Script
-            id="adsbygoogle-init"
-            async
-            strategy="afterInteractive"
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
-            crossOrigin="anonymous"
-          />
-        ) : null}
+      <body className="font-sans antialiased bg-background text-foreground min-h-screen flex flex-col">
+        {/*
+          Fonts via CDN <link> — React 19 इन्हें <head> में hoist करता है।
+          जान-बूझकर next/font/google नहीं: वो build के समय Google Fonts
+          download करता है, और Vercel build IPs पर वह fetch कभी-कभी
+          fail होकर पूरा build गिरा देता है। CDN link runtime-only है।
+        */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="stylesheet"
+          precedence="default"
+          href="https://fonts.googleapis.com/css2?family=Mukta:wght@300;400;500;600;700;800&family=Noto+Serif+Devanagari:wght@400;700;900&display=swap"
+        />
+
+        {/*
+          AdSense — strategy="beforeInteractive" के साथ यह <head> में
+          inject होता है (Google का standard header placement)।
+        */}
+        <Script
+          id="adsbygoogle-init"
+          async
+          strategy="beforeInteractive"
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+          crossOrigin="anonymous"
+        />
+
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

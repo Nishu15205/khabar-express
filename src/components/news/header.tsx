@@ -101,6 +101,7 @@ export function SiteHeader({
                 aria-hidden="true"
               />
               <Input
+                id="site-search"
                 type="search"
                 value={search}
                 onChange={(e) => onSearchChange(e.target.value)}

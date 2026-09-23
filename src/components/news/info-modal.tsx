@@ -180,10 +180,6 @@ const CONTENT: Record<
         <Section heading="जवाब का समय">
           <p>सामान्य प्रश्नों पर 2–3 कार्यदिवसों में; कॉपीराइट शिकायतों पर 48 घंटे के भीतर।</p>
         </Section>
-        <p className="rounded-lg bg-muted/60 p-3 text-xs leading-6">
-          नोट: यह ईमेल पता उदाहरण है — वेबसाइट चलाने से पहले इसे अपने वास्तविक ईमेल से
-          बदल लें (src/components/news/info-modal.tsx में SITE_EMAIL)।
-        </p>
       </>
     ),
   },

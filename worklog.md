@@ -43,3 +43,27 @@ Stage Summary:
 - Site ab Google News-style aggregator model par hai: headline + short snippet + attribution + outbound link = AdSense-safe
 - Deploy se pehle user ko sirf 2 cheezein badalni hain: SITE_EMAIL (info-modal.tsx) aur ads.txt mein apni pub-ID
 - Agar koi publisher DMCA bheje, uski feed feeds.ts se ek line hatakar 100% compliant ho jayega
+
+---
+Task ID: 3
+Agent: main (Z.ai Code)
+Task: AdSense signup support — Vercel-proof deployment (ephemeral DB fix) + AdSense form guidance
+
+Work Log:
+- User AdSense signup form par pahunch gaya; "Your site" ke liye live URL chahiye — deployment blocker identify kiya
+- CRITICAL fix: Vercel/read-only-FS par SQLite fail hota — news-service.ts mein `ensureSchema()` self-healing bootstrap add kiya (CREATE TABLE IF NOT EXISTS + 4 indexes via $executeRawUnsafe, globalThis-memoized, failure par retry)
+- ensureSeeded: Promise.race with 8s cap (serverless function timeout protection)
+- getNews/getTrending/searchNews/ensureFresh: sab queries se pehle ensureSchema() await
+- page.tsx: getInitialData().catch() fallback — cold/missing DB par bhi homepage kabhi 500 nahi karega (client-side refetch recover karta hai)
+- package.json: `postinstall: prisma generate` (Vercel build ke liye zaroori)
+- next.config.ts: output standalone sirf self-hosting ke liye; VERCEL env par undefined (native Vercel build)
+- .gitignore: db/*.db add kiya (fresh clone self-heal karega)
+- info-modal.tsx: contact modal se visible "example email" note hataya (AdSense review-safe)
+- Self-heal TEST kiya: DB file delete → server restart → schema auto-created, feeds re-seeded, APIs + SSR sab working (Vercel cold-start simulation passed)
+- Dev server spawn pattern discover kiya: `( bun run dev & )` subshell double-fork hi cross-call survive karta hai (nohup/setsid SIGKILL ho jate hain)
+- Browser-verified: homepage 30 articles, Privacy modal (AdSense+DART clause), DMCA modal (48-hour takedown), zero console errors, lint clean
+
+Stage Summary:
+- Site ab Vercel first-try deploy ke liye ready: DATABASE_URL=file:/tmp/khabar.db env + auto schema heal + feed reseed
+- DB ab poori tarah disposable cache hai — delete/corrupt hone par bhi site khud recover karti hai
+- AdSense flow: deploy → custom domain (vercel.app se approval mushkil) → form me URL → signup → ca-pub ID → NEXT_PUBLIC_ADSENSE_CLIENT + ads.txt

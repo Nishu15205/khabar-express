@@ -9,6 +9,59 @@ import type { CategorySlug } from "@/lib/feeds";
 import type { NewsArticle } from "@/lib/types";
 
 /* ------------------------------------------------------------------ */
+/* Schema bootstrap (self-healing)                                     */
+/* ------------------------------------------------------------------ */
+
+const gSchema = globalThis as unknown as { __khabarSchemaReady?: Promise<void> };
+
+/**
+ * Creates the Article table if it is missing.
+ *
+ * Needed for hosts with an ephemeral filesystem (e.g. Vercel, where the DB
+ * lives at file:/tmp/… and every cold start begins with an empty database).
+ * The feed refiller then repopulates it automatically. Also self-heals a
+ * locally deleted/corrupted DB file, so the site can never hard-crash.
+ */
+export function ensureSchema(): Promise<void> {
+  if (!gSchema.__khabarSchemaReady) {
+    gSchema.__khabarSchemaReady = (async () => {
+      await db.$executeRawUnsafe(
+        `CREATE TABLE IF NOT EXISTS "Article" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "guid" TEXT NOT NULL,
+  "title" TEXT NOT NULL,
+  "description" TEXT NOT NULL DEFAULT '',
+  "link" TEXT NOT NULL,
+  "image" TEXT,
+  "category" TEXT NOT NULL,
+  "source" TEXT NOT NULL,
+  "views" INTEGER NOT NULL DEFAULT 0,
+  "publishedAt" DATETIME NOT NULL,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+)`
+      );
+      await db.$executeRawUnsafe(
+        `CREATE UNIQUE INDEX IF NOT EXISTS "Article_guid_key" ON "Article"("guid")`
+      );
+      await db.$executeRawUnsafe(
+        `CREATE INDEX IF NOT EXISTS "Article_category_publishedAt_idx" ON "Article"("category", "publishedAt")`
+      );
+      await db.$executeRawUnsafe(
+        `CREATE INDEX IF NOT EXISTS "Article_views_idx" ON "Article"("views")`
+      );
+      await db.$executeRawUnsafe(
+        `CREATE INDEX IF NOT EXISTS "Article_publishedAt_idx" ON "Article"("publishedAt")`
+      );
+    })().catch((e) => {
+      // Don't cache the failure — allow the next call to retry.
+      gSchema.__khabarSchemaReady = undefined;
+      console.error("[news] schema bootstrap failed", e);
+    });
+  }
+  return gSchema.__khabarSchemaReady;
+}
+
+/* ------------------------------------------------------------------ */
 /* RSS parsing                                                         */
 /* ------------------------------------------------------------------ */
 
@@ -182,6 +235,7 @@ export function ensureFresh(force = false): Promise<void> {
   lastRefreshAt = Date.now();
 
   inFlight = (async () => {
+    await ensureSchema();
     const results = await Promise.allSettled(FEEDS.map((f) => fetchFeed(f)));
     const okCount = results.filter((r) => r.status === "fulfilled").length;
     results.forEach((r, i) => {
@@ -211,8 +265,17 @@ export function ensureFresh(force = false): Promise<void> {
 /** Await only on a cold/empty DB so the very first page render has news. */
 export async function ensureSeeded(): Promise<void> {
   try {
+    await ensureSchema();
     const count = await db.article.count();
-    if (count < 30) await ensureFresh(true);
+    if (count < 30) {
+      // Cap the wait so serverless functions never hit their time limit —
+      // partial data renders, the rest arrives via background refresh +
+      // client-side refetch.
+      await Promise.race([
+        ensureFresh(true),
+        new Promise((r) => setTimeout(r, 8000)),
+      ]);
+    }
   } catch (e) {
     console.error("[news] ensureSeeded failed", e);
   }
@@ -267,6 +330,7 @@ export async function getNews(opts: {
   offset?: number;
 }): Promise<NewsArticle[]> {
   const { category = "top", limit = 12, offset = 0 } = opts;
+  await ensureSchema();
   // Background refresh — never blocks the response (except cold DB).
   void ensureFresh().catch(() => {});
   const rows = await db.article.findMany({
@@ -280,6 +344,7 @@ export async function getNews(opts: {
 }
 
 export async function getTrending(limit = 8): Promise<NewsArticle[]> {
+  await ensureSchema();
   void ensureFresh().catch(() => {});
   const rows = await db.article.findMany({
     orderBy: [{ views: "desc" }, { publishedAt: "desc" }],
@@ -292,6 +357,7 @@ export async function getTrending(limit = 8): Promise<NewsArticle[]> {
 export async function searchNews(q: string, limit = 20): Promise<NewsArticle[]> {
   const query = q.trim();
   if (query.length < 2) return [];
+  await ensureSchema();
   void ensureFresh().catch(() => {});
   const rows = await db.article.findMany({
     where: {

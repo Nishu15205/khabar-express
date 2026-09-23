@@ -50,5 +50,7 @@ test
 prompt
 
 server.log
+# sqlite databases (site self-heals a fresh DB on boot)
+db/*.db
 # Skills directory
 /skills/
